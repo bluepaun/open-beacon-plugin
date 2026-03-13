@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type SafetyServiceLike = {
   showBlacklist: () => unknown
@@ -20,15 +21,15 @@ export function createBeaconBlacklistTool(safetyService: SafetyServiceLike): Too
       const action = String(args.action ?? "show")
       switch (action) {
         case "show":
-          return safetyService.showBlacklist()
+          return toToolOutput(safetyService.showBlacklist())
         case "add":
-          return safetyService.addBlacklist(String(args.path ?? ""))
+          return toToolOutput(safetyService.addBlacklist(String(args.path ?? "")))
         case "remove":
-          return safetyService.removeBlacklist(String(args.path ?? ""))
+          return toToolOutput(safetyService.removeBlacklist(String(args.path ?? "")))
         case "reset":
-          return safetyService.resetBlacklist()
+          return toToolOutput(safetyService.resetBlacklist())
         default:
-          return { error: `Unknown action: ${action}` }
+          return toToolOutput({ error: `Unknown action: ${action}` })
       }
     },
   }

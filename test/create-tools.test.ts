@@ -109,7 +109,7 @@ describe("createTools", () => {
       expect(Object.keys(tools)).toContain("beacon_blacklist")
 
       const results = await tools.beacon_search.execute({ query: "auth flow" })
-      expect(results).toEqual([{ file: "src/auth.ts", lines: "1-10", similarity: "0.900", preview: "export function signIn() {}" }])
+      expect(results).toBe(JSON.stringify([{ file: "src/auth.ts", lines: "1-10", similarity: "0.900", preview: "export function signIn() {}" }], null, 2))
     })
   })
 })

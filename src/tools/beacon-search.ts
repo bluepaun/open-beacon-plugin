@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type SearchServiceLike = {
   search: (args: {
@@ -23,13 +24,13 @@ export function createBeaconSearchTool(searchService: SearchServiceLike): ToolDe
       hybrid: z.boolean().optional(),
     },
     async execute(args) {
-      return await searchService.search({
+      return toToolOutput(await searchService.search({
         query: String(args.query),
         topK: typeof args.topK === "number" ? args.topK : undefined,
         threshold: typeof args.threshold === "number" ? args.threshold : undefined,
         path: typeof args.path === "string" ? args.path : undefined,
         hybrid: typeof args.hybrid === "boolean" ? args.hybrid : undefined,
-      })
+      }))
     },
   }
 }

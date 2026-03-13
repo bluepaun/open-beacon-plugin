@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type ConfigServiceLike = {
   show: () => unknown
@@ -23,15 +24,15 @@ export function createBeaconConfigTool(configService: ConfigServiceLike): ToolDe
       const action = String(args.action ?? "show")
       switch (action) {
         case "show":
-          return configService.show()
+          return toToolOutput(configService.show())
         case "set":
-          return configService.set(String(args.key ?? ""), String(args.value ?? ""))
+          return toToolOutput(configService.set(String(args.key ?? ""), String(args.value ?? "")))
         case "provider":
-          return configService.provider(typeof args.name === "string" ? args.name : undefined)
+          return toToolOutput(configService.provider(typeof args.name === "string" ? args.name : undefined))
         case "reset":
-          return configService.reset(typeof args.section === "string" ? args.section : undefined)
+          return toToolOutput(configService.reset(typeof args.section === "string" ? args.section : undefined))
         default:
-          return { error: `Unknown action: ${action}` }
+          return toToolOutput({ error: `Unknown action: ${action}` })
       }
     },
   }

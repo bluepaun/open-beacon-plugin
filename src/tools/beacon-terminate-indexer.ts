@@ -1,4 +1,5 @@
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type IndexingServiceLike = {
   terminateIndexer: () => Promise<{ status: string; pid?: number; message: string }>
@@ -9,7 +10,7 @@ export function createBeaconTerminateIndexerTool(indexingService: IndexingServic
     description: "Kill a running Open Beacon sync process and clean up state",
     args: {},
     async execute() {
-      return await indexingService.terminateIndexer()
+      return toToolOutput(await indexingService.terminateIndexer())
     },
   }
 }

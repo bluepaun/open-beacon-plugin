@@ -1,4 +1,5 @@
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type IndexingServiceLike = {
   reindex: () => Promise<string>
@@ -9,7 +10,7 @@ export function createBeaconReindexTool(indexingService: IndexingServiceLike): T
     description: "Delete Beacon embeddings and rebuild the index",
     args: {},
     async execute() {
-      return await indexingService.reindex()
+      return toToolOutput(await indexingService.reindex())
     },
   }
 }

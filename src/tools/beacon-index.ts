@@ -1,4 +1,5 @@
 import type { ToolDefinition } from "../plugin/types"
+import { toToolOutput } from "../shared/tool-output"
 
 type StatusServiceLike = {
   getIndexOverview: () => Promise<unknown>
@@ -9,7 +10,7 @@ export function createBeaconIndexTool(statusService: StatusServiceLike): ToolDef
     description: "Render the Beacon index overview",
     args: {},
     async execute() {
-      return await statusService.getIndexOverview()
+      return toToolOutput(await statusService.getIndexOverview())
     },
   }
 }
