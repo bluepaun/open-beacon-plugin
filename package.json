@@ -18,7 +18,9 @@
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm",
     "test": "bun test",
+    "test:coverage": "bun run scripts/check-coverage-threshold.ts",
     "typecheck": "tsc --noEmit",
+    "prepare": "husky",
     "prepublishOnly": "bun run typecheck && bun test && bun run build"
   },
   "keywords": [
@@ -46,9 +48,10 @@
     "zod": "4.1.8"
   },
   "devDependencies": {
-    "@types/picomatch": "^4.0.2",
     "@opencode-ai/plugin": "^1.2.24",
+    "@types/picomatch": "^4.0.2",
     "bun-types": "^1.3.10",
+    "husky": "^9.1.7",
     "typescript": "^5.9.2"
   }
 }
