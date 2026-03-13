@@ -1,6 +1,6 @@
 {
   "name": "@bluepaun/open-beacon-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenCode migration of Beacon semantic code search",
   "type": "module",
   "main": "./dist/index.js",
