@@ -116,5 +116,34 @@ describe("createPluginInterface", () => {
       expect(counters.gc).toBe(1)
       expect(compactOutput.context).toEqual(["Beacon: healthy"])
     })
+
+    test("#when config hook runs #then bundled agents are registered without overriding user config", async () => {
+      const managers = createManagersWithCounters({ sync: 0, reembed: [], gc: 0 })
+      const hooks = createHooks({ directory: process.cwd(), pluginConfig: OPEN_BEACON_DEFAULT_CONFIG, managers })
+      const pluginInterface = createPluginInterface({ hooks, tools: {} })
+      const config = {
+        agent: {
+          "code-explorer": {
+            description: "Custom explorer",
+            mode: "subagent",
+          },
+          reviewer: {
+            description: "Review only",
+            mode: "subagent",
+          },
+        },
+      }
+
+      await pluginInterface.config(config)
+
+      expect(config.agent["code-explorer"]).toEqual({
+        description: "Custom explorer",
+        mode: "subagent",
+      })
+      expect(config.agent.reviewer).toEqual({
+        description: "Review only",
+        mode: "subagent",
+      })
+    })
   })
 })

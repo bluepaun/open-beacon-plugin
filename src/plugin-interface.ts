@@ -1,4 +1,5 @@
 import type { CreatedHooks } from "./create-hooks"
+import { createConfigHandler } from "./plugin/config"
 import { createEventHandler } from "./plugin/event"
 import { createToolExecuteAfterHandler } from "./plugin/tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./plugin/tool-execute-before"
@@ -8,8 +9,11 @@ export function createPluginInterface(args: {
   hooks: CreatedHooks
   tools: ToolsRecord
 }) {
+  const configHandler = createConfigHandler()
+
   return {
     tool: args.tools,
+    config: configHandler,
     event: createEventHandler(args.hooks),
     "tool.execute.before": createToolExecuteBeforeHandler(args.hooks),
     "tool.execute.after": createToolExecuteAfterHandler(args.hooks),
