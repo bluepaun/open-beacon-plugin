@@ -11,11 +11,13 @@
 
 ---
 
-This project is an OpenCode migration of the original Beacon plugin by `sagarmk`.
+This project is an OpenCode port/adaptation of the original Beacon plugin by `sagarmk`.
 
 - Original project: `https://github.com/sagarmk/beacon-plugin`
 - Original local source: `beacon-plugin/`
 - OpenCode migration target: `open-beacon-plugin/`
+
+Licensed under the MIT License. See `LICENSE`.
 
 The README structure and product language here intentionally follow the original Beacon README closely, with the integration details rewritten for OpenCode.
 
@@ -31,27 +33,34 @@ ollama serve &
 ollama pull nomic-embed-text
 ```
 
-### 2. Install dependencies
+### 2. Configure the OpenCode plugin
 
-```bash
-cd open-beacon-plugin
-bun install
-```
+You can enable the plugin in either place:
 
-### 3. Configure OpenCode
+- global: `~/.config/opencode/opencode.json` for all projects
+- project-local: `opencode.json` in the repo root for one project only
 
-Create `opencode.json` in your project root:
+Add the plugin entry to whichever config you want to use:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./open-beacon-plugin"]
+  "plugin": ["@bluepaun/open-beacon-plugin"]
 }
 ```
 
-### 4. Add Open Beacon config
+OpenCode installs npm plugins automatically with Bun at startup.
 
-Create `.opencode/open-beacon.json` in your repo:
+### 3. Add Open Beacon config
+
+Open Beacon has its own config file separate from `opencode.json`:
+
+- global: `~/.config/opencode/open-beacon.json` for shared defaults across projects
+- project-local: `.opencode/open-beacon.json` in the repo root for project-specific overrides
+
+Recommended setup:
+
+Global `~/.config/opencode/open-beacon.json`
 
 ```json
 {
@@ -62,32 +71,28 @@ Create `.opencode/open-beacon.json` in your repo:
     "dimensions": 768,
     "batch_size": 10,
     "query_prefix": "search_query: "
-  },
+  }
+}
+```
+
+Project-local `.opencode/open-beacon.json`
+
+```json
+{
   "storage": {
     "path": ".opencode/.beacon"
   }
 }
 ```
 
-### 5. Start OpenCode
+You can use either file by itself, or both together. Project-local values override global ones.
+
+### 4. Start OpenCode
 
 That is it. On session start, Open Beacon can:
 1. **Index your codebase** automatically in the background
 2. **Re-embed changed files** as you edit
 3. **Use hybrid search** across semantic similarity and keyword matching
-
-### npm plugin installation
-
-Once published, users can install Open Beacon as an npm plugin directly from OpenCode config:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@bluepaun/open-beacon-plugin"]
-}
-```
-
-OpenCode installs npm plugins automatically with Bun at startup.
 
 ## Usage
 
@@ -399,9 +404,29 @@ Default configuration (`src/config/defaults.ts`):
 | `search.similarity_threshold` | `0.35` | Minimum similarity score |
 | `search.hybrid.enabled` | `true` | Enable hybrid search |
 
-#### Per-repo overrides
+#### Global and per-repo overrides
 
-Create `.opencode/open-beacon.json` in any repo to override defaults. Values are deep-merged with the default config:
+Open Beacon looks for config in these places:
+
+- global: `~/.config/opencode/open-beacon.json`
+- project-local: `.opencode/open-beacon.json`
+
+These values are deep-merged with the built-in defaults, and project-local values override global ones.
+
+Global example:
+
+```json
+{
+  "embedding": {
+    "api_base": "http://localhost:11434/v1",
+    "model": "nomic-embed-text",
+    "dimensions": 768,
+    "query_prefix": "search_query: "
+  }
+}
+```
+
+Project-local example:
 
 ```json
 {
@@ -486,3 +511,7 @@ npm publish --access public
 ```
 
 If you publish under a different npm scope, update the package name in `package.json` and the install snippet above.
+
+## License
+
+MIT. See `LICENSE`.
