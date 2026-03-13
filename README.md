@@ -76,6 +76,19 @@ That is it. On session start, Open Beacon can:
 2. **Re-embed changed files** as you edit
 3. **Use hybrid search** across semantic similarity and keyword matching
 
+### npm plugin installation
+
+Once published, users can install Open Beacon as an npm plugin directly from OpenCode config:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@bluepaun/open-beacon-plugin"]
+}
+```
+
+OpenCode installs npm plugins automatically with Bun at startup.
+
 ## Usage
 
 After installing, Open Beacon can index automatically on session start. Here are the essentials:
@@ -460,3 +473,16 @@ bun run typecheck
 ```
 
 Architecture notes are documented in `SPEC.md`.
+
+## Publishing
+
+To publish Open Beacon for other users:
+
+```bash
+bun run typecheck
+bun test
+bun run build
+npm publish --access public
+```
+
+If you publish under a different npm scope, update the package name in `package.json` and the install snippet above.

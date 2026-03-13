@@ -5,7 +5,7 @@ import { createPluginInterface } from "./plugin-interface"
 import { loadPluginConfig } from "./plugin-config"
 import type { PluginContext } from "./plugin/types"
 
-const OpenBeaconPlugin = async (ctx: PluginContext) => {
+export const OpenBeaconPlugin = async (ctx: PluginContext) => {
   const pluginConfig = loadPluginConfig(ctx.directory)
   const disabledHooks = new Set(pluginConfig.disabled_hooks)
 

@@ -1,14 +1,44 @@
 {
-  "name": "open-beacon-plugin",
+  "name": "@bluepaun/open-beacon-plugin",
   "version": "0.1.0",
-  "description": "OpenCode plugin adapter for Beacon semantic code search",
+  "description": "OpenCode migration of Beacon semantic code search",
   "type": "module",
-  "module": "src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "SPEC.md",
+    "templates"
+  ],
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build"
   },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "beacon",
+    "semantic-search",
+    "code-search"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluepaun/open-beacon-plugin.git"
+  },
+  "homepage": "https://github.com/bluepaun/open-beacon-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/bluepaun/open-beacon-plugin/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
   "dependencies": {
     "jsonc-parser": "^3.3.1",
     "picomatch": "^4.0.3",
