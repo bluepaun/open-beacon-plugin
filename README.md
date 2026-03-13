@@ -313,7 +313,7 @@ Open Beacon indexes your codebase automatically on session start and re-embeds f
 | `beacon_blacklist` / `/blacklist` | Prevent indexing of specific directories |
 | `beacon_whitelist` / `/whitelist` | Allow indexing in otherwise-blacklisted directories |
 
-Open Beacon automatically registers a bundled **code-explorer** subagent, and also includes companion command and skill assets under `templates/.opencode/`.
+Open Beacon automatically registers bundled slash commands like `/search-code` and `/index`, the **code-explorer** subagent, and the bundled `semantic-search` skill by adding `templates/.opencode/skills` to `config.skills.paths`. Template assets remain bundled under `templates/.opencode/` for reference.
 
 <details>
 <summary><strong>Why Beacon?</strong></summary>

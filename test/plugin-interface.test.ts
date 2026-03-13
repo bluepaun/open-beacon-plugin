@@ -117,11 +117,17 @@ describe("createPluginInterface", () => {
       expect(compactOutput.context).toEqual(["Beacon: healthy"])
     })
 
-    test("#when config hook runs #then bundled agents are registered without overriding user config", async () => {
+    test("#when config hook runs #then bundled agents and commands are registered without overriding user config", async () => {
       const managers = createManagersWithCounters({ sync: 0, reembed: [], gc: 0 })
       const hooks = createHooks({ directory: process.cwd(), pluginConfig: OPEN_BEACON_DEFAULT_CONFIG, managers })
       const pluginInterface = createPluginInterface({ hooks, tools: {} })
-      const config = {
+      const config: Record<string, any> = {
+        command: {
+          index: {
+            description: "Custom index command",
+            template: "Use a custom index flow.",
+          },
+        },
         agent: {
           "code-explorer": {
             description: "Custom explorer",
@@ -132,10 +138,23 @@ describe("createPluginInterface", () => {
             mode: "subagent",
           },
         },
+        skills: {
+          paths: ["/tmp/custom-skills"],
+          urls: ["https://example.com/skills"],
+        },
       }
 
       await pluginInterface.config(config)
 
+      expect(config.command.index).toEqual({
+        description: "Custom index command",
+        template: "Use a custom index flow.",
+      })
+      expect(config.command["search-code"]).toEqual({
+        description: "Hybrid code search using Open Beacon",
+        agent: "build",
+        template: "Use the `beacon_search` tool to search for: $ARGUMENTS\nReview the top results first. Only read files directly when the previews are insufficient.",
+      })
       expect(config.agent["code-explorer"]).toEqual({
         description: "Custom explorer",
         mode: "subagent",
@@ -144,6 +163,12 @@ describe("createPluginInterface", () => {
         description: "Review only",
         mode: "subagent",
       })
+      expect(config.skills.urls).toEqual(["https://example.com/skills"])
+      expect(config.skills.paths).toContain("/tmp/custom-skills")
+      expect(config.skills.paths).toHaveLength(2)
+      expect(
+        config.skills.paths.some((entry: string) => entry.endsWith("templates/.opencode/skills")),
+      ).toBe(true)
     })
   })
 })

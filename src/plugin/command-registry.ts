@@ -2,8 +2,8 @@ import fs from "node:fs"
 
 import { loadBundledMarkdownEntries, type FileSystemLike } from "./template-registry"
 
-export function loadBundledAgents(
+export function loadBundledCommands(
   fileSystem: FileSystemLike = fs,
 ): Record<string, Record<string, unknown>> {
-  return loadBundledMarkdownEntries("agents", "prompt", fileSystem)
+  return loadBundledMarkdownEntries("commands", "template", fileSystem)
 }
