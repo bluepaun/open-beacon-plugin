@@ -16,7 +16,7 @@
     "templates"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --format esm",
+    "build": "bun build src/index.ts --outdir dist --target bun --format esm --external @huggingface/transformers",
     "test": "bun test",
     "test:coverage": "bun run scripts/check-coverage-threshold.ts",
     "typecheck": "tsc --noEmit",
@@ -43,6 +43,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "jsonc-parser": "^3.3.1",
     "picomatch": "^4.0.3",
     "zod": "4.1.8"

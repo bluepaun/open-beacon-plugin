@@ -47,7 +47,7 @@ describe("loadPluginConfig", () => {
       expect(config.storage.path).toBe(".claude/.beacon")
       expect(config.disabled_tools).toEqual(["beacon_config", "beacon_index"])
       expect(config.disabled_hooks).toEqual(["compact-status"])
-      expect(config.embedding.model).toBe("nomic-embed-text")
+      expect(config.embedding.model).toBe("nomic-ai/nomic-embed-text-v1.5")
 
       rmSync(root, { recursive: true, force: true })
     })
