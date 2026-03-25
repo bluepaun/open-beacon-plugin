@@ -17,3 +17,5 @@ coverage/
 
 .vscode/
 .idea/
+
+opencode.json
