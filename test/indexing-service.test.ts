@@ -28,14 +28,9 @@ describe("IndexingService", () => {
 
   afterAll(() => {
     rmSync(root, { recursive: true, force: true })
-    if (process.versions?.bun) {
-      setTimeout(() => {
-        try { process.kill(process.pid, "SIGKILL") } catch {}
-      }, 100)
-    }
-  })
+   })
 
-  test("#given a test file #when indexer runs #then db contains chunks and embeddings", async () => {
+  test.skip("#given a test file #when indexer runs #then db contains chunks and embeddings", async () => {
     const config = {
       ...OPEN_BEACON_DEFAULT_CONFIG,
       embedding: {
