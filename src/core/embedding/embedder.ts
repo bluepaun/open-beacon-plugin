@@ -15,6 +15,7 @@ export interface Embedder {
   embedDocuments(texts: string[]): Promise<number[][]>
   embedQuery(query: string): Promise<number[]>
   ping(): Promise<{ ok: true } | { ok: false; error: string }>
+  dispose?(): Promise<void>
 }
 
 type EmbeddingApiResponse = {
@@ -100,6 +101,8 @@ export class RemoteEmbedder implements Embedder {
   }
 }
 
+const globalPipelines: any[] = []
+
 export class LocalEmbedder implements Embedder {
   private readonly model: string
   private readonly batchSize: number
@@ -122,8 +125,12 @@ export class LocalEmbedder implements Embedder {
       // Create pipeline to fetch ONNX model and tokenizer
       // using the provided model name (default: nomic-ai/nomic-embed-text-v1.5)
       this.pipelinePromise = pipeline("feature-extraction", this.model, {
-        quantized: this.quantized,
+        dtype: this.quantized ? "q8" : "fp32",
       } as any)
+      
+      this.pipelinePromise.then(p => {
+        globalPipelines.push(p)
+      }).catch(() => {})
     }
     return this.pipelinePromise
   }
@@ -168,11 +175,26 @@ export class LocalEmbedder implements Embedder {
       }
     }
   }
+
+  async dispose(): Promise<void> {
+    if (this.pipelinePromise) {
+      try {
+        const extractor = await this.pipelinePromise
+        if (extractor && typeof extractor.dispose === "function") {
+          await extractor.dispose()
+        }
+      } catch (error) {
+        // ignore errors during dispose
+      }
+      this.pipelinePromise = null
+    }
+  }
 }
 
 export function createEmbedder(config: OpenBeaconConfig): Embedder {
   if (config.embedding.provider === "local") {
     return new LocalEmbedder(config)
   }
+
   return new RemoteEmbedder(config)
 }

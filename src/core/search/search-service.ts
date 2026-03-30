@@ -95,9 +95,13 @@ export class SearchService {
             _note: row._note,
           })),
         )
+      } finally {
+        if (embedder.dispose) {
+          try { await embedder.dispose() } catch {}
+        }
       }
     } finally {
-      db.close()
+      try { db.close() } catch {}
     }
   }
 

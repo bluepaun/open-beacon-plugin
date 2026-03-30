@@ -71,7 +71,10 @@ export class IndexingService {
       db.deleteOrphanChunks(relativePath, chunks.length - 1)
       return "reembedded"
     } finally {
-      db.close()
+      if (embedder.dispose) {
+        try { await embedder.dispose() } catch {}
+      }
+      try { db.close() } catch {}
     }
   }
 
@@ -231,7 +234,10 @@ export class IndexingService {
       db.storeDimensions()
       return "ok"
     } finally {
-      db.close()
+      if (embedder.dispose) {
+        try { await embedder.dispose() } catch {}
+      }
+      try { db.close() } catch {}
       try {
         unlinkSync(this.pidFile)
       } catch {

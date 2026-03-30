@@ -3,7 +3,6 @@ export const OPEN_BEACON_PROVIDERS = {
     description: "Local ONNX (Zero-setup)",
     embedding: {
       provider: "local",
-      api_base: "http://localhost:11434/v1",
       model: "nomic-ai/nomic-embed-text-v1.5",
       api_key_env: "",
       dimensions: 768,
