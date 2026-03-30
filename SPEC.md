@@ -4,21 +4,20 @@
 
 `open-beacon-plugin` ports Beacon's Claude Code oriented integration into an OpenCode native plugin architecture inspired by `oh-my-opencode`.
 
-The initial implementation is a phase-1 adapter:
+The current implementation is fully native to Bun:
 
 - OpenCode native plugin surface
 - Bun based project and test workflow
-- thin entrypoint with factory composition
-- wrapper services around Beacon's existing script-based core
-- compatibility-oriented config loading for `.opencode` and legacy `.claude`
+- SQLite indexing and local embeddings using `@huggingface/transformers`
+- Compatibility-oriented config loading for `.opencode` and legacy `.claude`
+- Fully rewritten native indexing and search services, eliminating the need for wrapper scripts
 
 ## Design Principles
 
 - Keep `src/index.ts` orchestration-only.
-- Keep Beacon search/index logic outside the entrypoint.
 - Separate OpenCode glue (`plugin/`, `hooks/`, `tools/`) from core services (`core/`).
-- Preserve a migration path from legacy Beacon scripts before fully rewriting the core.
 - Use Bun for package management and `bun test` for behavior-first tests.
+- Support a zero-setup out-of-the-box experience via the `local` ONNX provider.
 
 ## Initialization Flow
 
@@ -52,9 +51,9 @@ Rules:
 
 Reusable services and adapters:
 
-- `runtime/`: command execution and legacy Beacon script invocation
-- `search/`: query execution and result normalization
-- `indexing/`: sync, reindex, re-embed, garbage collection
+- `embedding/`: provider-based embedding execution (`LocalEmbedder` using ONNX, Ollama, OpenAI, etc.)
+- `search/`: query execution, hybrid scoring (BM25 + vector + heuristics), and result normalization
+- `indexing/`: SQLite storage, sync, reindex, re-embed, garbage collection
 - `status/`: compact status and index visibility helpers
 - `config/`: effective config inspection for tools
 
@@ -87,14 +86,6 @@ OpenCode specific handler layer:
 - tool registry
 - pre/post tool handler wrappers
 
-## Phase 1 Compatibility Model
-
-The current scaffold wraps legacy Beacon scripts instead of rewriting all internals immediately.
-
-- `runtime.beacon_root` points at the existing Beacon core checkout or a future vendored core directory.
-- Node scripts are executed through a Bun-friendly shell abstraction.
-- Missing `runtime.beacon_root` is treated as a configuration error at execution time, not at plugin load time.
-
 ## Test Strategy
 
 Use `bun test` with given/when/then style suites.
@@ -105,6 +96,7 @@ Initial coverage targets:
 - tool registry filtering
 - grep redirect heuristics
 - plugin interface dispatch
+- embedder abstractions and search services
 
 ## Non-Goals For This Phase
 

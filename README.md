@@ -27,6 +27,8 @@ The README structure and product language here intentionally follow the original
 
 ### 1. Install Ollama (local embeddings, free)
 
+Open Beacon works with Ollama by default, but you can also opt-in to zero-setup native local ONNX embeddings (see Models section).
+
 ```bash
 brew install ollama
 ollama serve &
@@ -65,6 +67,7 @@ Global `~/.config/opencode/open-beacon.json`
 ```json
 {
   "embedding": {
+    "provider": "ollama",
     "api_base": "http://localhost:11434/v1",
     "model": "nomic-embed-text",
     "api_key_env": "",
@@ -75,6 +78,8 @@ Global `~/.config/opencode/open-beacon.json`
 }
 ```
 
+If you want to customize the built-in defaults, you can create a config:
+
 Project-local `.opencode/open-beacon.json`
 
 ```json
@@ -84,8 +89,6 @@ Project-local `.opencode/open-beacon.json`
   }
 }
 ```
-
-You can use either file by itself, or both together. Project-local values override global ones.
 
 ### 4. Start OpenCode
 
@@ -179,25 +182,31 @@ Options: `topK`, `threshold`, `path`, and `hybrid=false` for pure vector-style r
 
 ## Embedding Models
 
-Open Beacon runs on **open-source models by default** — no API keys, no cloud costs, fully local via [Ollama](https://ollama.com).
+Open Beacon runs on **open-source models by default** — no API keys, no cloud costs, fully local via [Ollama](https://ollama.com). It also supports zero-setup native ONNX models!
 
-| Model | Dims | Context | Speed | Best for |
-|-------|------|---------|-------|----------|
-| **nomic-embed-text** (default) | 768 | 8192 | Fast | General-purpose, great code search |
-| **mxbai-embed-large** | 1024 | 512 | Fast | Higher accuracy, larger vectors |
-| **snowflake-arctic-embed:l** | 1024 | 512 | Medium | Strong retrieval benchmarks |
-| **all-minilm** | 384 | 512 | Very fast | Lightweight, low resource usage |
+| Model | Provider | Dims | Context | Speed | Best for |
+|-------|----------|------|---------|-------|----------|
+| **nomic-embed-text** (default) | ollama | 768 | 8192 | Fast | General-purpose, great code search |
+| **nomic-ai/nomic-embed-text-v1.5** | local | 768 | 8192 | Fast | General-purpose, zero-setup ONNX |
+| **mxbai-embed-large** | ollama | 1024 | 512 | Fast | Higher accuracy, larger vectors |
+| **snowflake-arctic-embed:l** | ollama | 1024 | 512 | Medium | Strong retrieval benchmarks |
 
-To switch models, pull with Ollama and update your config:
+### Ollama Provider (Default)
+
+If you use the default [Ollama](https://ollama.com) provider, ensure Ollama is installed and running, then pull your desired model:
 
 ```bash
 ollama pull mxbai-embed-large
 ```
 
-```json
+Then update your config to use it:
+
+```jsonc
 // .opencode/open-beacon.json
 {
   "embedding": {
+    "provider": "ollama",
+    "api_base": "http://localhost:11434/v1",
     "model": "mxbai-embed-large",
     "dimensions": 1024,
     "query_prefix": ""
@@ -207,9 +216,25 @@ ollama pull mxbai-embed-large
 
 Then run `beacon_reindex` to rebuild with the new model.
 
+### Native Local Provider (ONNX)
+
+The `local` provider uses `@huggingface/transformers` to run quantized ONNX models directly inside Bun. Models are automatically downloaded to `.opencode/.beacon/models` upon first use, with no external server required.
+
+```jsonc
+// .opencode/open-beacon.json
+{
+  "embedding": {
+    "provider": "local",
+    "model": "nomic-ai/nomic-embed-text-v1.5",
+    "dimensions": 768,
+    "quantized": true
+  }
+}
+```
+
 ### Cloud Providers
 
-For cloud-hosted embeddings, create `.opencode/open-beacon.json` in your repo:
+For cloud-hosted embeddings, specify the appropriate `provider` (`openai`, `voyage`, `litellm`, etc.) or simply set the `api_base` and `api_key_env` in `.opencode/open-beacon.json`:
 
 <details>
 <summary><strong>OpenAI</strong></summary>
@@ -221,6 +246,7 @@ export OPENAI_API_KEY="sk-..."
 ```json
 {
   "embedding": {
+    "provider": "openai",
     "api_base": "https://api.openai.com/v1",
     "model": "text-embedding-3-small",
     "api_key_env": "OPENAI_API_KEY",
@@ -243,6 +269,7 @@ export VOYAGE_API_KEY="pa-..."
 ```json
 {
   "embedding": {
+    "provider": "voyage",
     "api_base": "https://api.voyageai.com/v1",
     "model": "voyage-code-3",
     "api_key_env": "VOYAGE_API_KEY",
@@ -266,6 +293,7 @@ litellm --model vertex_ai/text-embedding-004 --port 4000
 ```json
 {
   "embedding": {
+    "provider": "litellm",
     "api_base": "http://localhost:4000/v1",
     "model": "vertex_ai/text-embedding-004",
     "api_key_env": "LITELLM_API_KEY",
@@ -281,7 +309,7 @@ litellm --model vertex_ai/text-embedding-004 --port 4000
 <details>
 <summary><strong>Custom endpoint</strong></summary>
 
-Any server implementing the OpenAI `/v1/embeddings` API will work. Set `api_base`, `model`, `dimensions`, and optionally `api_key_env` in `.opencode/open-beacon.json`.
+Any server implementing the OpenAI `/v1/embeddings` API will work. Set `provider: "custom"`, along with `api_base`, `model`, `dimensions`, and optionally `api_key_env` in `.opencode/open-beacon.json`.
 
 </details>
 
@@ -322,7 +350,7 @@ Open Beacon automatically registers bundled slash commands like `/search-code` a
 - **Query expansion** — searches for `auth` can also find `authentication`, `authorize`, and `login`
 - **Stays in sync automatically** — hooks handle full index, incremental re-embedding on edits, and garbage collection
 - **Resilient** — retries with backoff on transient failures and keeps keyword-only fallback available
-- **Works with any embedding provider** — Ollama, OpenAI, Voyage AI, LiteLLM, or any OpenAI-compatible API
+- **Works with any embedding provider** — Native ONNX, Ollama, OpenAI, Voyage AI, LiteLLM, or any OpenAI-compatible API
 - **Gives OpenCode better context** — tools, companion commands, agent assets, and grep redirection for smarter search
 
 </details>
@@ -350,12 +378,14 @@ Default configuration (`src/config/defaults.ts`):
 ```json
 {
   "embedding": {
+    "provider": "ollama",
     "api_base": "http://localhost:11434/v1",
     "model": "nomic-embed-text",
     "api_key_env": "",
     "dimensions": 768,
     "batch_size": 10,
-    "query_prefix": "search_query: "
+    "query_prefix": "search_query: ",
+    "quantized": false
   },
   "chunking": {
     "strategy": "hybrid",
@@ -391,10 +421,12 @@ Default configuration (`src/config/defaults.ts`):
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `embedding.api_base` | `http://localhost:11434/v1` | Embedding API endpoint |
+| `embedding.provider` | `ollama` | `local`, `ollama`, `openai`, `voyage`, etc. |
 | `embedding.model` | `nomic-embed-text` | Embedding model name |
 | `embedding.dimensions` | `768` | Vector dimensions (must match model) |
-| `embedding.query_prefix` | `search_query: ` | Prefix prepended to search queries |
+| `embedding.quantized` | `false` | Use quantized ONNX model (for `local` provider) |
+| `embedding.query_prefix` | `"search_query: "` | Prefix prepended to search queries |
+| `embedding.api_base` | `http://localhost:11434/v1` | Embedding API endpoint (ignored by `local`) |
 | `indexing.include` | Common code patterns | Glob patterns for files to index |
 | `indexing.exclude` | `node_modules`, `dist`, etc. | Glob patterns to skip |
 | `indexing.max_file_size_kb` | `500` | Skip files larger than this |
@@ -418,6 +450,7 @@ Global example:
 ```json
 {
   "embedding": {
+    "provider": "ollama",
     "api_base": "http://localhost:11434/v1",
     "model": "nomic-embed-text",
     "dimensions": 768,
@@ -431,6 +464,7 @@ Project-local example:
 ```json
 {
   "embedding": {
+    "provider": "openai",
     "api_base": "https://api.openai.com/v1",
     "model": "text-embedding-3-small",
     "api_key_env": "OPENAI_API_KEY",
@@ -454,9 +488,9 @@ Open Beacon stores its SQLite database at `.opencode/.beacon/embeddings.db` by d
 <details>
 <summary><strong>Troubleshooting</strong></summary>
 
-### What if Ollama is down?
+### What if my remote API or Ollama is down?
 
-Open Beacon degrades gracefully when the embedding server is unreachable — it never blocks your session.
+If you are using a cloud provider or Ollama, Open Beacon degrades gracefully when the embedding server is unreachable — it never blocks your session.
 
 | Scenario | Behavior |
 |----------|----------|
@@ -465,13 +499,13 @@ Open Beacon degrades gracefully when the embedding server is unreachable — it 
 | **File edits** | Re-embedding fails and existing embeddings remain |
 | **Status tools** | Work normally from local DB state |
 
-Start Ollama at any time and run `beacon_run_indexer` to catch up.
+If you are using the optional `local` ONNX provider, this shouldn't happen unless the initial model download fails!
 
 ### Manual indexing
 
 | Tool | What it does |
 |---------|-------------|
-| `beacon_run_indexer` | Manually trigger indexing — useful when `auto_index` is off or after starting Ollama late |
+| `beacon_run_indexer` | Manually trigger indexing — useful when `auto_index` is off or after starting a remote provider late |
 | `beacon_reindex` | Force a full re-index from scratch |
 | `beacon_terminate_indexer` | Kill a stuck sync process and clean up state |
 
@@ -486,7 +520,7 @@ Things to look for:
 
 ### Verifying search
 
-Run `beacon_search` with a test query to confirm search is working. If results include `FTS-only`, the embedding server is unreachable — search still works, but without semantic ranking.
+Run `beacon_search` with a test query to confirm search is working. If results include `FTS-only`, the remote embedding server may be unreachable — search still works, but without semantic ranking.
 
 </details>
 

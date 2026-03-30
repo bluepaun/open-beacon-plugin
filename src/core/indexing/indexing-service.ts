@@ -4,7 +4,8 @@ import path from "node:path"
 import type { OpenBeaconConfig } from "../../config/schema"
 import { chunkCode } from "../chunking/chunker"
 import { extractIdentifiers } from "../chunking/tokenizer"
-import { Embedder } from "../embedding/embedder"
+import type { Embedder } from "../embedding/embedder"
+import { createEmbedder } from "../embedding/embedder"
 import { getFileHash, getModifiedFilesSince, getRepoFiles } from "../repo/git"
 import { shouldIndex } from "../repo/ignore"
 import { getRepoRoot } from "../repo/repo-root"
@@ -48,7 +49,7 @@ export class IndexingService {
     }
 
     const db = openDatabase(dbPath, this.config.embedding.dimensions)
-    const embedder = new Embedder(this.config)
+    const embedder = createEmbedder(this.config)
 
     try {
       const absolutePath = path.join(this.repoRoot, relativePath)
@@ -70,7 +71,10 @@ export class IndexingService {
       db.deleteOrphanChunks(relativePath, chunks.length - 1)
       return "reembedded"
     } finally {
-      db.close()
+      if (embedder.dispose) {
+        try { await embedder.dispose() } catch {}
+      }
+      try { db.close() } catch {}
     }
   }
 
@@ -164,7 +168,7 @@ export class IndexingService {
       return "blacklisted"
     }
 
-    if (!force && this.config.indexing.auto_index === false) {
+    if (!force && !this.config.indexing.auto_index) {
       return "auto-index-disabled"
     }
 
@@ -172,7 +176,7 @@ export class IndexingService {
     writeFileSync(this.pidFile, String(process.pid))
 
     const db = openDatabase(this.dbPath(), this.config.embedding.dimensions)
-    const embedder = new Embedder(this.config)
+    const embedder = createEmbedder(this.config)
 
     try {
       const dimensionCheck = db.checkDimensions()
@@ -230,7 +234,10 @@ export class IndexingService {
       db.storeDimensions()
       return "ok"
     } finally {
-      db.close()
+      if (embedder.dispose) {
+        try { await embedder.dispose() } catch {}
+      }
+      try { db.close() } catch {}
       try {
         unlinkSync(this.pidFile)
       } catch {

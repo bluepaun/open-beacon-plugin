@@ -2,7 +2,7 @@ import path from "node:path"
 
 import type { OpenBeaconConfig } from "../../config/schema"
 import { chunkCode } from "../chunking/chunker"
-import { Embedder } from "../embedding/embedder"
+import { createEmbedder } from "../embedding/embedder"
 import { getRepoRoot } from "../repo/repo-root"
 import { openDatabase } from "../storage/open-db"
 
@@ -65,7 +65,7 @@ export class SearchService {
         },
       }
 
-      const embedder = new Embedder(effectiveConfig)
+      const embedder = createEmbedder(effectiveConfig)
       try {
         const queryEmbedding = await embedder.embedQuery(args.query)
         return mergeAdjacentChunks(
@@ -95,9 +95,13 @@ export class SearchService {
             _note: row._note,
           })),
         )
+      } finally {
+        if (embedder.dispose) {
+          try { await embedder.dispose() } catch {}
+        }
       }
     } finally {
-      db.close()
+      try { db.close() } catch {}
     }
   }
 

@@ -1,12 +1,14 @@
 import { z } from "zod"
 
 export const OpenBeaconEmbeddingConfigSchema = z.object({
+  provider: z.enum(["local", "ollama", "openai"]).default("ollama"),
   api_base: z.string().default("http://localhost:11434/v1"),
   model: z.string().default("nomic-embed-text"),
   api_key_env: z.string().default(""),
   dimensions: z.number().int().positive().default(768),
   batch_size: z.number().int().positive().default(10),
   query_prefix: z.string().default("search_query: "),
+  quantized: z.boolean().default(false),
 })
 
 export const OpenBeaconChunkingConfigSchema = z.object({
@@ -50,12 +52,14 @@ export const OpenBeaconSearchConfigSchema = z.object({
 
 export const OpenBeaconConfigSchema = z.object({
   embedding: OpenBeaconEmbeddingConfigSchema.default({
+    provider: "ollama",
     api_base: "http://localhost:11434/v1",
     model: "nomic-embed-text",
     api_key_env: "",
     dimensions: 768,
     batch_size: 10,
     query_prefix: "search_query: ",
+    quantized: false,
   }),
   chunking: OpenBeaconChunkingConfigSchema.default({
     strategy: "hybrid",

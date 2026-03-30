@@ -2,12 +2,14 @@ import type { OpenBeaconConfig } from "./schema"
 
 export const OPEN_BEACON_DEFAULT_CONFIG: OpenBeaconConfig = {
   embedding: {
+    provider: "ollama",
     api_base: "http://localhost:11434/v1",
     model: "nomic-embed-text",
     api_key_env: "",
     dimensions: 768,
     batch_size: 10,
     query_prefix: "search_query: ",
+    quantized: false,
   },
   chunking: {
     strategy: "hybrid",

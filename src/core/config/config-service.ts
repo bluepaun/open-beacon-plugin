@@ -156,7 +156,7 @@ export class ConfigService {
 
     const userConfig = this.loadProjectConfig()
     const mergedBefore = mergeConfigs(OPEN_BEACON_DEFAULT_CONFIG, userConfig) as OpenBeaconConfig
-    userConfig.embedding = { ...preset.embedding }
+    userConfig.embedding = { ...OPEN_BEACON_DEFAULT_CONFIG.embedding, ...preset.embedding }
     this.saveProjectConfig(userConfig)
     return {
       action: "provider",
@@ -204,8 +204,9 @@ export class ConfigService {
 
   private detectProvider(config: OpenBeaconConfig): string {
     for (const [name, preset] of Object.entries(OPEN_BEACON_PROVIDERS)) {
+      const presetApiBase = "api_base" in preset.embedding ? preset.embedding.api_base : OPEN_BEACON_DEFAULT_CONFIG.embedding.api_base
       if (
-        config.embedding.api_base === preset.embedding.api_base
+        config.embedding.api_base === presetApiBase
         && config.embedding.model === preset.embedding.model
         && config.embedding.dimensions === preset.embedding.dimensions
       ) {

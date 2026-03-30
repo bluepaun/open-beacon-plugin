@@ -81,7 +81,7 @@ export class StatusService {
         last_sync: null,
         db_path: this.dbPath(),
         embedding_model: this.config.embedding.model,
-        embedding_endpoint: this.config.embedding.api_base,
+        embedding_endpoint: this.config.embedding.provider === "local" ? "local" : this.config.embedding.api_base,
       }
     }
 
@@ -94,7 +94,7 @@ export class StatusService {
         last_sync: db.getSyncState("last_sync_time"),
         db_path: this.dbPath(),
         embedding_model: this.config.embedding.model,
-        embedding_endpoint: this.config.embedding.api_base,
+        embedding_endpoint: this.config.embedding.provider === "local" ? "local" : this.config.embedding.api_base,
       }
     } finally {
       db.close()
@@ -115,19 +115,15 @@ export class StatusService {
   }
 
   private getConfigSummary() {
-    const detectedProvider = Object.entries(OPEN_BEACON_PROVIDERS).find(([, preset]) => {
-      const embedding = preset.embedding
-      return embedding.api_base === this.config.embedding.api_base
-        && embedding.model === this.config.embedding.model
-        && embedding.dimensions === this.config.embedding.dimensions
-    })
+    const providerName = this.config.embedding.provider || "custom"
+    const preset = OPEN_BEACON_PROVIDERS[providerName as keyof typeof OPEN_BEACON_PROVIDERS]
 
     return {
       model: this.config.embedding.model,
-      endpoint: this.config.embedding.api_base,
+      endpoint: providerName === "local" ? "local" : this.config.embedding.api_base,
       dimensions: this.config.embedding.dimensions,
-      provider: detectedProvider?.[0] ?? "custom",
-      provider_description: detectedProvider?.[1].description ?? "Custom",
+      provider: providerName,
+      provider_description: preset?.description ?? "Custom",
       chunking_strategy: this.config.chunking.strategy,
       max_tokens_per_chunk: this.config.chunking.max_tokens,
       storage_path: this.storagePath,
