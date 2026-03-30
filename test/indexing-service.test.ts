@@ -41,6 +41,7 @@ describe("IndexingService", () => {
       embedding: {
         ...OPEN_BEACON_DEFAULT_CONFIG.embedding,
         // Use a smaller model to make the test faster
+        provider: "local" as const,
         model: "Xenova/all-MiniLM-L6-v2",
         dimensions: 384,
       },

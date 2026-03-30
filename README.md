@@ -25,9 +25,17 @@ The README structure and product language here intentionally follow the original
 
 ## Quick Start
 
-Open Beacon works out of the box with zero setup! By default, the plugin uses a native Bun implementation of `@huggingface/transformers` to run ONNX embeddings directly. It automatically downloads the `nomic-ai/nomic-embed-text-v1.5` model and caches it locally, requiring no external tools like Ollama to be installed.
+### 1. Install Ollama (local embeddings, free)
 
-### 1. Configure the OpenCode plugin
+Open Beacon works with Ollama by default, but you can also opt-in to zero-setup native local ONNX embeddings (see Models section).
+
+```bash
+brew install ollama
+ollama serve &
+ollama pull nomic-embed-text
+```
+
+### 2. Configure the OpenCode plugin
 
 You can enable the plugin in either place:
 
@@ -45,12 +53,30 @@ Add the plugin entry to whichever config you want to use:
 
 OpenCode installs npm plugins automatically with Bun at startup.
 
-### 2. Add Open Beacon config (Optional)
+### 3. Add Open Beacon config
 
 Open Beacon has its own config file separate from `opencode.json`:
 
 - global: `~/.config/opencode/open-beacon.json` for shared defaults across projects
 - project-local: `.opencode/open-beacon.json` in the repo root for project-specific overrides
+
+Recommended setup:
+
+Global `~/.config/opencode/open-beacon.json`
+
+```json
+{
+  "embedding": {
+    "provider": "ollama",
+    "api_base": "http://localhost:11434/v1",
+    "model": "nomic-embed-text",
+    "api_key_env": "",
+    "dimensions": 768,
+    "batch_size": 10,
+    "query_prefix": "search_query: "
+  }
+}
+```
 
 If you want to customize the built-in defaults, you can create a config:
 
@@ -64,7 +90,7 @@ Project-local `.opencode/open-beacon.json`
 }
 ```
 
-### 3. Start OpenCode
+### 4. Start OpenCode
 
 That is it. On session start, Open Beacon can:
 1. **Index your codebase** automatically in the background
@@ -101,8 +127,8 @@ Example response shape:
     "last_sync": "2026-03-01T04:30:21.453Z"
   },
   "config": {
-    "model": "nomic-ai/nomic-embed-text-v1.5",
-    "provider": "local"
+    "model": "nomic-embed-text",
+    "provider": "ollama"
   }
 }
 ```
@@ -114,8 +140,8 @@ For a quick numeric summary, use `beacon_index_status`.
   "files_indexed": 38,
   "total_chunks": 114,
   "last_sync": "2026-03-01T04:30:21.453Z",
-  "embedding_model": "nomic-ai/nomic-embed-text-v1.5",
-  "embedding_endpoint": "local"
+  "embedding_model": "nomic-embed-text",
+  "embedding_endpoint": "http://localhost:11434/v1"
 }
 ```
 
@@ -156,18 +182,43 @@ Options: `topK`, `threshold`, `path`, and `hybrid=false` for pure vector-style r
 
 ## Embedding Models
 
-Open Beacon runs on **open-source models by default** via a native ONNX integration — no API keys, no cloud costs, and no external tools to install.
+Open Beacon runs on **open-source models by default** — no API keys, no cloud costs, fully local via [Ollama](https://ollama.com). It also supports zero-setup native ONNX models!
 
 | Model | Provider | Dims | Context | Speed | Best for |
 |-------|----------|------|---------|-------|----------|
-| **nomic-ai/nomic-embed-text-v1.5** (default) | local | 768 | 8192 | Fast | General-purpose, zero-setup, great code search |
-| **nomic-embed-text** | ollama | 768 | 8192 | Fast | General-purpose, great code search |
+| **nomic-embed-text** (default) | ollama | 768 | 8192 | Fast | General-purpose, great code search |
+| **nomic-ai/nomic-embed-text-v1.5** | local | 768 | 8192 | Fast | General-purpose, zero-setup ONNX |
 | **mxbai-embed-large** | ollama | 1024 | 512 | Fast | Higher accuracy, larger vectors |
 | **snowflake-arctic-embed:l** | ollama | 1024 | 512 | Medium | Strong retrieval benchmarks |
 
-### Native Local Provider (Default)
+### Ollama Provider (Default)
 
-The `local` provider uses `@huggingface/transformers` to run quantized ONNX models directly inside Bun. Models are automatically downloaded to `.opencode/.beacon/models` upon first use.
+If you use the default [Ollama](https://ollama.com) provider, ensure Ollama is installed and running, then pull your desired model:
+
+```bash
+ollama pull mxbai-embed-large
+```
+
+Then update your config to use it:
+
+```jsonc
+// .opencode/open-beacon.json
+{
+  "embedding": {
+    "provider": "ollama",
+    "api_base": "http://localhost:11434/v1",
+    "model": "mxbai-embed-large",
+    "dimensions": 1024,
+    "query_prefix": ""
+  }
+}
+```
+
+Then run `beacon_reindex` to rebuild with the new model.
+
+### Native Local Provider (ONNX)
+
+The `local` provider uses `@huggingface/transformers` to run quantized ONNX models directly inside Bun. Models are automatically downloaded to `.opencode/.beacon/models` upon first use, with no external server required.
 
 ```jsonc
 // .opencode/open-beacon.json
@@ -180,31 +231,6 @@ The `local` provider uses `@huggingface/transformers` to run quantized ONNX mode
   }
 }
 ```
-
-### Ollama Provider
-
-If you prefer to use larger models via [Ollama](https://ollama.com), ensure Ollama is installed and running, then pull your desired model:
-
-```bash
-ollama pull nomic-embed-text
-```
-
-Then update your config to use the `ollama` provider:
-
-```jsonc
-// .opencode/open-beacon.json
-{
-  "embedding": {
-    "provider": "ollama",
-    "api_base": "http://localhost:11434/v1",
-    "model": "nomic-embed-text",
-    "dimensions": 768,
-    "query_prefix": "search_query: "
-  }
-}
-```
-
-Then run `beacon_reindex` to rebuild with the new model.
 
 ### Cloud Providers
 
@@ -352,14 +378,14 @@ Default configuration (`src/config/defaults.ts`):
 ```json
 {
   "embedding": {
-    "provider": "local",
+    "provider": "ollama",
     "api_base": "http://localhost:11434/v1",
-    "model": "nomic-ai/nomic-embed-text-v1.5",
+    "model": "nomic-embed-text",
     "api_key_env": "",
     "dimensions": 768,
     "batch_size": 10,
-    "query_prefix": "",
-    "quantized": true
+    "query_prefix": "search_query: ",
+    "quantized": false
   },
   "chunking": {
     "strategy": "hybrid",
@@ -395,11 +421,11 @@ Default configuration (`src/config/defaults.ts`):
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `embedding.provider` | `local` | `local`, `ollama`, `openai`, `voyage`, etc. |
-| `embedding.model` | `nomic-ai/nomic-embed-text-v1.5` | Embedding model name |
+| `embedding.provider` | `ollama` | `local`, `ollama`, `openai`, `voyage`, etc. |
+| `embedding.model` | `nomic-embed-text` | Embedding model name |
 | `embedding.dimensions` | `768` | Vector dimensions (must match model) |
-| `embedding.quantized` | `true` | Use quantized ONNX model (for `local` provider) |
-| `embedding.query_prefix` | `""` | Prefix prepended to search queries |
+| `embedding.quantized` | `false` | Use quantized ONNX model (for `local` provider) |
+| `embedding.query_prefix` | `"search_query: "` | Prefix prepended to search queries |
 | `embedding.api_base` | `http://localhost:11434/v1` | Embedding API endpoint (ignored by `local`) |
 | `indexing.include` | Common code patterns | Glob patterns for files to index |
 | `indexing.exclude` | `node_modules`, `dist`, etc. | Glob patterns to skip |
@@ -473,7 +499,7 @@ If you are using a cloud provider or Ollama, Open Beacon degrades gracefully whe
 | **File edits** | Re-embedding fails and existing embeddings remain |
 | **Status tools** | Work normally from local DB state |
 
-If you are using the default `local` ONNX provider, this shouldn't happen unless the initial model download fails!
+If you are using the optional `local` ONNX provider, this shouldn't happen unless the initial model download fails!
 
 ### Manual indexing
 
